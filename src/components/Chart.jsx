@@ -5,17 +5,17 @@ import ReactApexChart from "react-apexcharts";
 function Chart({ id, data, title, y_title }) {
   return (
     <ReactApexChart
-      className="text-white"
+      className="text-[#581845]"
       options={{
         theme: {
-          mode: "dark",
+          mode: "light",
           palette: "palette1",
         },
         chart: {
           id: id,
           height: 350,
           type: "line",
-          foreColor: "#fff",
+          foreColor: "#581845",
           background: "transparent",
           animations: {
             enabled: true,
@@ -40,7 +40,7 @@ function Chart({ id, data, title, y_title }) {
           tickAmount: 30,
           style: {
             fontFamily: "Lato",
-            color: "#fff",
+            color: "#581845",
           },
 
           labels: {
@@ -55,11 +55,11 @@ function Chart({ id, data, title, y_title }) {
             style: {
               fontFamily: "Lato-bold",
               fontSize: "12px",
-              color: "#fff",
+              color: "#581845",
             },
           },
           min: 0,
-          max: 300,
+          max: 10,
         },
         title: {
           text: title,
@@ -67,14 +67,14 @@ function Chart({ id, data, title, y_title }) {
           style: {
             fontFamily: "Lato",
             fontSize: "18px",
-            color: "#fff",
+            color: "#581845",
           },
         },
 
         fill: {
           type: "gradient",
           gradient: {
-            shade: "dark",
+            shade: "light",
             gradientToColors: ["#FDD835"],
             shadeIntensity: 1,
             type: "horizontal",
