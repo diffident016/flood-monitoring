@@ -29,11 +29,11 @@ function Chart({ id, data, title, y_title }) {
           size: 1,
         },
         dataLabels: {
-          enabled: true,
+          enabled: false,
         },
         stroke: {
           width: 1,
-          curve: "smooth",
+          curve: "straight",
         },
         xaxis: {
           type: "datetime",
@@ -54,7 +54,7 @@ function Chart({ id, data, title, y_title }) {
             text: y_title,
             style: {
               fontFamily: "Lato-bold",
-              fontSize: "12px",
+              fontSize: "14px",
               color: "#581845",
             },
           },

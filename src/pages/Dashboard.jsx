@@ -5,9 +5,18 @@ import "leaflet.heat";
 import Chart from "../components/Chart";
 import { onValue, ref } from "firebase/database";
 import { db } from "../../firebase";
+import { addSeconds, differenceInSeconds } from "date-fns";
+import { useInterval } from "../utils/useInterval";
 
 function Dashboard() {
   const [map, setMap] = useState(null);
+  const [layers, setLayers] = useState(null);
+  const [probe1, setProbe1] = useState([{ x: new Date(), y: 0 }]);
+  const [probe2, setProbe2] = useState([{ x: new Date(), y: 0 }]);
+  const [probe3, setProbe3] = useState([{ x: new Date(), y: 0 }]);
+
+  var timer = null;
+  var sProbes = [{}, {}, {}];
 
   const addressPoints = [
     [8.486104791856079, 124.65652210538705, 0],
@@ -21,7 +30,7 @@ function Dashboard() {
     },
     {
       fetchState: 0,
-      probes: [],
+      data: [],
       count: 0,
     }
   );
@@ -38,10 +47,16 @@ function Dashboard() {
   );
 
   const LEVEL = {
-    0: { label: "No Flood", color: "" },
+    0: { label: "No Flood", color: "#581845" },
     1: { label: "Low", color: "#ffc100" },
     2: { label: "Mid", color: "#ff7400" },
     3: { label: "High", color: "#ff0000" },
+  };
+
+  const LOCATION = {
+    1: "USTP CDO - Campus",
+    2: "Osmeña Street",
+    3: "Limketkai Drive",
   };
 
   const columns = useMemo(() => [
@@ -52,29 +67,35 @@ function Dashboard() {
     },
     {
       name: "Status",
-      cell: (row) => <p className="text-sm"></p>,
-      wrap: true,
-    },
-    {
-      name: "Latitude",
-      selector: (row) => `${row.lat || ""}`.substring(0, 8),
-      wrap: true,
-    },
-    {
-      name: "Longitude",
       cell: (row) => (
-        <p className="text-sm">{`${row.lon || ""}`.substring(0, 10)}</p>
+        <p className="text-sm">{checkStatus(row) ? "Active" : "Inactive"}</p>
       ),
+      wrap: true,
+    },
+    {
+      name: "Coordinates",
+      cell: (row) => (
+        <p className="text-sm">{`${String(row.lat).substring(0, 8)} - ${String(
+          row.lon
+        ).substring(0, 10)}`}</p>
+      ),
+      wrap: true,
+    },
+    {
+      name: "Location",
+      cell: (row) => <p className="text-sm">{LOCATION[row["probe"]]}</p>,
       wrap: true,
     },
     {
       name: "Flood Level",
-      cell: (row) => (
-        <p
-          style={{ color: `${LEVEL[row.value].color}` }}
-          className="text-sm"
-        >{`${row.value} - ${LEVEL[row.value].label}`}</p>
-      ),
+      cell: (row) =>
+        checkStatus(row) ? (
+          <p style={{ color: `${LEVEL[row.value].color}` }} className="text-sm">
+            {`${row.value} - ${LEVEL[row.value].label}`}
+          </p>
+        ) : (
+          <p>---</p>
+        ),
       wrap: true,
     },
   ]);
@@ -82,21 +103,35 @@ function Dashboard() {
   useEffect(() => {
     if (!map) return;
 
-    const newPoints = generateHeatmapPoints(addressPoints);
+    const realPoints = probes["data"].map((item) => [
+      item["lat"],
+      item["lon"],
+      checkStatus(item) ? (item["value"] ? parseInt(item["value"]) / 3 : 0) : 0,
+    ]);
 
-    console.log(newPoints);
+    const newPoints = generateHeatmapPoints(realPoints);
 
     const points = newPoints
       ? newPoints.map((p) => {
           return [p[0], p[1], p[2]];
         })
       : [];
-    L.heatLayer(points, {
+
+    if (layers) {
+      map.removeLayer(layers);
+      setLayers(null);
+    }
+
+    const temp = L.heatLayer(points, {
       minOpacity: 0,
       radius: 15,
-      blur: 20,
+      blur: 25,
+      max: 1,
+      gradient: { 0.4: "lime", 0.65: "yellow", 1: "red" },
     }).addTo(map);
-  }, [map]);
+
+    setLayers(temp);
+  }, [probes["data"]]);
 
   useEffect(() => {
     const query = ref(db, "/");
@@ -107,10 +142,11 @@ function Dashboard() {
       if (!data) return;
 
       if (snapshot.exists()) {
-        const probes = Object.keys(data).map((item) => {
+        const probes = Object.keys(data).map((item, i) => {
           let newData = data[item];
 
           newData["probe"] = item[item.length - 1];
+          sProbes[i] = newData;
           return newData;
         });
 
@@ -137,7 +173,74 @@ function Dashboard() {
     });
   }, []);
 
-  function generateHeatmapPoints(points, count = 20, radius = 0.00009) {
+  useInterval(() => {
+    if (probes["data"].length < 1) return;
+
+    var temp = probe1;
+    if (temp.length >= 30) {
+      temp.shift();
+    }
+
+    temp.push({
+      x: new Date(),
+      y: checkStatus(probes["data"][0]) ? parseInt(probes["data"][0].value) : 0,
+    });
+    setProbe1(temp);
+
+    temp = probe2;
+    if (temp.length >= 30) {
+      temp.shift();
+    }
+
+    temp.push({
+      x: new Date(),
+      y: checkStatus(probes["data"][1]) ? parseInt(probes["data"][1].value) : 0,
+    });
+    setProbe2(temp);
+
+    temp = probe3;
+    if (temp.length >= 30) {
+      temp.shift();
+    }
+
+    temp.push({
+      x: new Date(),
+      y: checkStatus(probes["data"][2]) ? parseInt(probes["data"][2].value) : 0,
+    });
+    setProbe3(temp);
+
+    ApexCharts.exec("flood-chart", "updateSeries", [
+      {
+        name: "Probe #1",
+        style: {
+          fontFamily: "Lato",
+          fontSize: "14px",
+          color: "#581845",
+        },
+        data: probe1,
+      },
+      {
+        name: "Probe #2",
+        style: {
+          fontFamily: "Lato",
+          fontSize: "14px",
+          color: "#581845",
+        },
+        data: probe2,
+      },
+      {
+        name: "Probe #3",
+        style: {
+          fontFamily: "Lato",
+          fontSize: "14px",
+          color: "#581845",
+        },
+        data: probe3,
+      },
+    ]);
+  }, 1000);
+
+  function generateHeatmapPoints(points, count = 5, radius = 0.00009) {
     const generatedPoints = [];
 
     points.forEach(([lat, lng, intensity]) => {
@@ -149,10 +252,17 @@ function Dashboard() {
 
         generatedPoints.push([newLat, newLng, intensity]);
       }
-      generatedPoints.push([lat, lng, intensity, intensity]);
     });
 
     return generatedPoints;
+  }
+
+  function checkStatus(probe) {
+    if (!probe) return;
+
+    let timestamp = new Date(probe["timestamp"] * 1000);
+
+    return differenceInSeconds(new Date(), timestamp) <= 5;
   }
 
   return (
@@ -208,7 +318,7 @@ function Dashboard() {
           <Chart
             id="flood-chart"
             title={"Water Level Over Time"}
-            y_title={"Level"}
+            y_title={"Level (ft)"}
             data={[
               {
                 name: "Probe #1",
@@ -217,7 +327,7 @@ function Dashboard() {
                   fontSize: "14px",
                   color: "#581845",
                 },
-                data: [],
+                data: probe1,
               },
               {
                 name: "Probe #2",
@@ -226,7 +336,7 @@ function Dashboard() {
                   fontSize: "14px",
                   color: "#581845",
                 },
-                data: [],
+                data: probe2,
               },
               {
                 name: "Probe #3",
@@ -235,7 +345,7 @@ function Dashboard() {
                   fontSize: "14px",
                   color: "#581845",
                 },
-                data: [],
+                data: probe3,
               },
             ]}
           />
