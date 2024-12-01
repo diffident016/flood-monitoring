@@ -269,10 +269,10 @@ function Dashboard() {
     <div className="w-full h-screen font-lato">
       <div className="w-full h-full flex flex-col p-8 gap-6">
         <h1 className="font-lato-bold text-3xl">Flood Monitoring Dashboard</h1>
-        <div className="flex flex-row w-full h-[550px] gap-4">
-          <div className="w-1/2 h-full rounded-lg bg-white">
+        <div className="flex flex-row w-full h-full gap-4">
+          <div className="w-1/2 h-full rounded-lg flex flex-col gap-4">
             <DataTable
-              className="font-inter h-full overflow-hidden rounded-lg text-[#581845]"
+              className="font-inter h-full overflow-hidden rounded-lg text-[#581845] bg-white "
               columns={columns}
               data={probes["data"]}
               customStyles={{
@@ -309,46 +309,46 @@ function Dashboard() {
                 </div>
               }
             />
+            <div className="p-4 bg-white rounded-[15px] ">
+              <Chart
+                id="flood-chart"
+                title={"Water Level Over Time"}
+                y_title={"Level (ft)"}
+                data={[
+                  {
+                    name: "Probe #1",
+                    style: {
+                      fontFamily: "Lato",
+                      fontSize: "14px",
+                      color: "#581845",
+                    },
+                    data: probe1,
+                  },
+                  {
+                    name: "Probe #2",
+                    style: {
+                      fontFamily: "Lato",
+                      fontSize: "14px",
+                      color: "#581845",
+                    },
+                    data: probe2,
+                  },
+                  {
+                    name: "Probe #3",
+                    style: {
+                      fontFamily: "Lato",
+                      fontSize: "14px",
+                      color: "#581845",
+                    },
+                    data: probe3,
+                  },
+                ]}
+              />
+            </div>
           </div>
           <div className="w-1/2 h-full">
             <HeatMap map={map} setMap={setMap} />
           </div>
-        </div>
-        <div className="p-4 bg-white rounded-[15px] ">
-          <Chart
-            id="flood-chart"
-            title={"Water Level Over Time"}
-            y_title={"Level (ft)"}
-            data={[
-              {
-                name: "Probe #1",
-                style: {
-                  fontFamily: "Lato",
-                  fontSize: "14px",
-                  color: "#581845",
-                },
-                data: probe1,
-              },
-              {
-                name: "Probe #2",
-                style: {
-                  fontFamily: "Lato",
-                  fontSize: "14px",
-                  color: "#581845",
-                },
-                data: probe2,
-              },
-              {
-                name: "Probe #3",
-                style: {
-                  fontFamily: "Lato",
-                  fontSize: "14px",
-                  color: "#581845",
-                },
-                data: probe3,
-              },
-            ]}
-          />
         </div>
       </div>
     </div>
