@@ -5,7 +5,7 @@ import "leaflet.heat";
 import Chart from "../components/Chart";
 import { onValue, ref } from "firebase/database";
 import { db } from "../../firebase";
-import { addSeconds, differenceInSeconds } from "date-fns";
+import { addSeconds, differenceInSeconds, format } from "date-fns";
 import { useInterval } from "../utils/useInterval";
 
 function Dashboard() {
@@ -14,6 +14,9 @@ function Dashboard() {
   const [probe1, setProbe1] = useState([{ x: new Date(), y: 0 }]);
   const [probe2, setProbe2] = useState([{ x: new Date(), y: 0 }]);
   const [probe3, setProbe3] = useState([{ x: new Date(), y: 0 }]);
+  const [dateTime, setDateTime] = useState(
+    format(new Date(), "MMMM dd, yyyy | hh:mm:ss a")
+  );
 
   var timer = null;
   var sProbes = [{}, {}, {}];
@@ -238,6 +241,10 @@ function Dashboard() {
         data: probe3,
       },
     ]);
+  }, 60000);
+
+  useInterval(() => {
+    setDateTime(format(new Date(), "MMMM dd, yyyy | hh:mm:ss a"));
   }, 1000);
 
   function generateHeatmapPoints(points, count = 5, radius = 0.00009) {
@@ -268,47 +275,63 @@ function Dashboard() {
   return (
     <div className="w-full h-screen font-lato">
       <div className="w-full h-full flex flex-col p-8 gap-6">
-        <h1 className="font-lato-bold text-3xl">Flood Monitoring Dashboard</h1>
+        <div className="w-full flex flex-row justify-between items-end">
+          <h1 className="font-lato-bold text-3xl ">
+            Flood Monitoring Dashboard
+          </h1>
+          <h1 className="font-lato text-lg">{dateTime}</h1>
+        </div>
         <div className="flex flex-row w-full h-full gap-4">
           <div className="w-1/2 h-full rounded-lg flex flex-col gap-4">
-            <DataTable
-              className="font-inter h-full overflow-hidden rounded-lg text-[#581845] bg-white "
-              columns={columns}
-              data={probes["data"]}
-              customStyles={{
-                rows: {
-                  style: {
-                    color: "#581845",
-                    "font-family": "Inter",
-                    "font-size": "13px",
-                    textAlign: "center",
+            <div className="w-full h-full flex flex-col bg-white">
+              <DataTable
+                className="font-inter h-[60%] overflow-hidden rounded-lg text-[#581845]"
+                columns={columns}
+                data={probes["data"]}
+                customStyles={{
+                  rows: {
+                    style: {
+                      color: "#581845",
+                      "font-family": "Inter",
+                      "font-size": "13px",
+                      textAlign: "center",
+                    },
                   },
-                },
-                headRow: {
-                  style: {
-                    "font-family": "Inter",
-                    backgroundColor: "#fff",
+                  headRow: {
+                    style: {
+                      "font-family": "Inter",
+                      backgroundColor: "#fff",
+                    },
                   },
-                },
-                headCells: {
-                  style: {
-                    color: "#581845",
-                    "font-size": "14px",
-                    "font-weight": "semi-bold",
+                  headCells: {
+                    style: {
+                      color: "#581845",
+                      "font-size": "14px",
+                      "font-weight": "semi-bold",
+                    },
                   },
-                },
-              }}
-              // persistTableHead
-              fixedHeader
-              allowOverflow
-              noDataComponent={
-                <div className="h-[450px] w-full flex items-center justify-center">
-                  <p className="bg-transparent font-inter text-sm text-[#581845]">
-                    No data yet.
+                }}
+                // persistTableHead
+                fixedHeader
+                allowOverflow
+                noDataComponent={
+                  <div className="h-[450px] w-full flex items-center justify-center">
+                    <p className="bg-transparent font-inter text-sm text-[#581845]">
+                      No data yet.
+                    </p>
+                  </div>
+                }
+              />
+              <div className="w-full h-[40%] flex flex-col px-4">
+                <div className="w-full h-12 border border-rose-300 bg-rose-100 rounded-lg flex items-center px-2 font-lato">
+                  <p className="flex flex-row gap-2 items-center">
+                    <span className="text-lg">⚠️</span>Alert! Flood level{" "}
+                    {"{level}"} detected in the area!
                   </p>
                 </div>
-              }
-            />
+              </div>
+            </div>
+
             <div className="p-4 bg-white rounded-[15px] ">
               <Chart
                 id="flood-chart"

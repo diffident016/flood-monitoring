@@ -37,7 +37,7 @@ function Chart({ id, data, title, y_title }) {
         },
         xaxis: {
           type: "datetime",
-          tickAmount: 30,
+
           style: {
             fontFamily: "Lato",
             color: "#581845",
