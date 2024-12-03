@@ -59,7 +59,7 @@ function Chart({ id, data, title, y_title }) {
             },
           },
           min: 0,
-          max: 10,
+          max: 5,
         },
         title: {
           text: title,
@@ -86,7 +86,7 @@ function Chart({ id, data, title, y_title }) {
       }}
       series={data}
       type="line"
-      height={350}
+      height={280}
     />
   );
 }

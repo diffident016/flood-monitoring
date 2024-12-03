@@ -247,7 +247,7 @@ function Dashboard() {
     setDateTime(format(new Date(), "MMMM dd, yyyy | hh:mm:ss a"));
   }, 1000);
 
-  function generateHeatmapPoints(points, count = 5, radius = 0.00009) {
+  function generateHeatmapPoints(points, count = 15, radius = 0.00009) {
     const generatedPoints = [];
 
     points.forEach(([lat, lng, intensity]) => {
@@ -268,8 +268,7 @@ function Dashboard() {
     if (!probe) return;
 
     let timestamp = new Date(probe["timestamp"] * 1000);
-
-    return differenceInSeconds(new Date(), timestamp) <= 5;
+    return differenceInSeconds(new Date(), timestamp) <= 10;
   }
 
   return (
@@ -285,7 +284,7 @@ function Dashboard() {
           <div className="w-1/2 h-full rounded-lg flex flex-col gap-4">
             <div className="w-full h-full flex flex-col bg-white">
               <DataTable
-                className="font-inter h-[60%] overflow-hidden rounded-lg text-[#581845]"
+                className="font-inter h-full overflow-hidden rounded-lg text-[#581845]"
                 columns={columns}
                 data={probes["data"]}
                 customStyles={{
@@ -322,17 +321,38 @@ function Dashboard() {
                   </div>
                 }
               />
-              <div className="w-full h-[40%] flex flex-col px-4">
+              <div className="w-full h-[40%] flex flex-col px-4 gap-2">
+                {probes["data"]
+                  .filter(
+                    (item) => item["value"] === "2" || item["value"] === "3"
+                  )
+                  .filter((item) => checkStatus(item))
+                  .map((item) => {
+                    return (
+                      <div
+                        key={item["probe"]}
+                        className="w-full h-12 border border-rose-300 bg-rose-100 rounded-lg flex items-center px-2 font-lato"
+                      >
+                        <p className="flex flex-row gap-2 items-center">
+                          <span className="text-lg">⚠️</span>Alert! Flood Level{" "}
+                          {item["value"]} detected in {LOCATION[item["probe"]]}!
+                        </p>
+                      </div>
+                    );
+                  })}
+              </div>
+
+              {/* <div className="w-full h-[40%] flex flex-col px-4">
                 <div className="w-full h-12 border border-rose-300 bg-rose-100 rounded-lg flex items-center px-2 font-lato">
                   <p className="flex flex-row gap-2 items-center">
                     <span className="text-lg">⚠️</span>Alert! Flood level{" "}
                     {"{level}"} detected in the area!
                   </p>
                 </div>
-              </div>
+              </div> */}
             </div>
 
-            <div className="p-4 bg-white rounded-[15px] ">
+            <div className="p-4 bg-white rounded-[15px]">
               <Chart
                 id="flood-chart"
                 title={"Water Level Over Time"}
