@@ -241,7 +241,7 @@ function Dashboard() {
         data: probe3,
       },
     ]);
-  }, 60000);
+  }, 5000);
 
   useInterval(() => {
     setDateTime(format(new Date(), "MMMM dd, yyyy | hh:mm:ss a"));
